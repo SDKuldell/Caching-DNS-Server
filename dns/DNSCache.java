@@ -25,10 +25,7 @@ public class DNSCache {
     public void checkCache(){
       Instant currentTime = Instant.now();
       
-      Iterator<DNSRecord> it = recordCache.iterator();
-
-      while(it.hasNext()){
-        DNSRecord comparisonRecord = it.next();
+      for(DNSRecord comparisonRecord : recordCache) {
 
         Instant thenTimestamp = comparisonRecord.getTimeStamp();
 
@@ -37,17 +34,14 @@ public class DNSCache {
         if(diff.toSeconds() > comparisonRecord.getTTL()) {
           recordCache.remove(comparisonRecord);
         }
-
       }
+      
     }
 
     public ArrayList<DNSRecord> returnRecords(String name_str, String type_str, String class_str) {
       ArrayList<DNSRecord> returnList = new ArrayList<DNSRecord>();
 
-      Iterator<DNSRecord> it = recordCache.iterator();
-
-      while(it.hasNext()){
-        DNSRecord comparisonRecord = it.next();
+      for(DNSRecord comparisonRecord : recordCache){
 
         if(comparisonRecord.getName().equals(name_str) && comparisonRecord.getTypeStr().equals(type_str) &&comparisonRecord.getClassStr().equals(class_str)){
           returnList.add(comparisonRecord);
