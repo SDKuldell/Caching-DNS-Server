@@ -7,14 +7,18 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
+import dns.DNSMessage;
+
 public class DNSServer {
     
     final private int PORT = 53;
     final private int MAX_SIZE = 512;
 
     private DNSZone zone;
-    /* TODO: add class variable for the cache */
-    /* TODO: add class variable to track pending queries */
+    /* TODO: add class variable for the cache :)*/
+    private DNSCache cache;
+    private HashMap<Integer,DNSMessage> outstandingQueries;
+
 
     private InetAddress nextServer;
     private int nextServerPort;
@@ -22,6 +26,7 @@ public class DNSServer {
     public DNSServer(DNSZone zone) {
         this.zone = zone;
         this.outstandingQueries = new HashMap<Integer,DNSMessage>();
+        this.cache = new DNSCache();
 
         try {
             nextServer = InetAddress.getByName("127.0.0.53");
@@ -31,7 +36,7 @@ public class DNSServer {
         }
         nextServerPort = 53;
 
-        /* TODO: add a DNSCache object */
+        /* TODO: add a DNSCache object :)*/
 
         System.out.printf("Starting server on port %d%n", PORT);
     }
@@ -47,6 +52,9 @@ public class DNSServer {
         var records = zone.getRecords(query.getQuestionName(), query.getQuestionType(), query.getQuestionClass());
 
         /* TODO: look for the record in the cache if it's not in our zone */
+
+        records.addAll(cache.returnRecords(query.getQuestionName(), query.getQuestionType(), query.getQuestionClass()));
+        
 
         /* send the response back to the client if we found the record either in our zone or in the cache */
         if(records.size() != 0) {
@@ -64,10 +72,14 @@ public class DNSServer {
         /* if we didn't find the record, send to the next server (see nextServer and nextServerPort variables) */
 
         /* TODO: print the response message contents */
+        	System.out.println("Forwarding Query to " + nextServer);
+        	System.out.println(query);
 
-        /* TODO: store the query so we can respond to it when we get a reply */
+        /* TODO: store the query so we can respond to it when we get a reply :)*/
+          outstandingQueries.put(query.getID(), query);
 
-        /* TODO: make and return a new DatagramPacket query packet to forward */
+        /* TODO: make and return a new DatagramPacket query packet to forward :)*/
+         return new DatagramPacket(query.getData(), query.getDataLength(), nextServer, nextServerPort);
     }
 
     /* TODO: complete me! */
@@ -76,19 +88,26 @@ public class DNSServer {
         System.out.println("Reply received from " + reply.getPacket().getSocketAddress());
         System.out.println(reply);
 
-        /* TODO: match the reply to the original query */
+        /* TODO: match the reply to the original query :)*/
+        DNSMessage origQuery = outstandingQueries.get(reply.getID());
 
-        /* TODO: add answers to the cache */
+        /* TODO: add answers to the cache :)*/
+        cache.addEntries(reply.getAnswers());
 
-        /* TODO: remove the original query from the outstanding set */
+        /* TODO: remove the original query from the outstanding set :)*/
+        outstandingQueries.remove(reply.getID());
 
-        /* TODO: print the reply message again for consistency */
+        /* TODO: print the reply message again for consistency :)*/
+        System.out.println("Forwarding reply to" + origQuery.getPacket().getSocketAddress());
+        System.out.println(reply);
 
-        /* TODO: make and return a new response packet to send to the original client */
+        /* TODO: make and return a new response packet to send to the original client :)*/
+        return new DatagramPacket(reply.getData(), reply.getDataLength(), origQuery.getPacket().getSocketAddress());
     }
 
     private DatagramPacket handleMessage(DatagramPacket incomingPkt) {
-        /* TODO: update the cache each time we receive a message, to remove any records with expired TTLs */
+        /* TODO: update the cache each time we receive a message, to remove any records with expired TTLs :)*/
+        cache.checkCache();    
 
         /* create a DNS Message object that will parse the request packet data */
         var incomingMessage = new DNSMessage(incomingPkt);
@@ -130,8 +149,7 @@ public class DNSServer {
             System.out.println("Network error!");
         }
     }
-
-    public static void main(String[] args) {
+        public static void main(String[] args) {
         if(args.length != 1) {
             System.out.println("Usage: sudo java dns.DNSServer zone_file");
             System.exit(0);

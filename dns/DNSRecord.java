@@ -2,6 +2,7 @@ package dns;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.time.Instant;
 
 public class DNSRecord {
 
@@ -13,6 +14,7 @@ public class DNSRecord {
     private String type_str;
     private int data_length;
     private String data;
+    private Instant timeStamp;
 
     private static HashMap<Integer,String> classes;
     private static HashMap<Integer,String> types;
@@ -25,7 +27,7 @@ public class DNSRecord {
         types.put(5,"CNAME");
     }
     
-    /* TODO: add something to track when this record object was stored */
+    /* TODO: add something to track when this record object was stored :)*/
 
     private void setDataLength() {
         if (this.type_num == 1) {
@@ -38,12 +40,17 @@ public class DNSRecord {
         }
     }
 
+    private Instant getCurrentTime() {
+      return Instant.now();
+    }
+
     public DNSRecord(String name, int ttl, String class_str, String type_str, String data) {
         this.name = name;
         this.ttl = ttl;
         this.class_str = class_str;
         this.type_str = type_str;
         this.data = data;
+        this.timeStamp = getCurrentTime();
 
         this.class_num = 0;
         for (Map.Entry<Integer, String> entry : classes.entrySet()) {
@@ -68,6 +75,7 @@ public class DNSRecord {
         this.class_num = class_num;
         this.type_num = type_num;
         this.data = data;
+        this.timeStamp = getCurrentTime();
 
         if(classes.containsKey(class_num)) {
             class_str = classes.get(class_num);
@@ -114,5 +122,9 @@ public class DNSRecord {
 
     public String getData() {
         return data;
+    }
+
+    public Instant getTimeStamp(){
+      return timeStamp;
     }
 }
